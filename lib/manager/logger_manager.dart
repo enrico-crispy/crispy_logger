@@ -174,6 +174,8 @@ abstract class LoggerManager {
 
   Future<void> sendLogs();
 
+  File getZipFile() => (Directory(logDirPath).listSync().firstWhere((file) => file.path.contains('.zip')) as File);
+
   String _getZipPath() {
     final dateTime = DateTime.now();
     final formattedDateTime = DateFormatter.logFormat(dateTime);
