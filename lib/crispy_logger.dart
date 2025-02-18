@@ -1,7 +1,5 @@
 import 'package:logger/logger.dart';
 
-export 'package:crispy_logger/logger_defaults.dart';
-export 'package:crispy_logger/manager/logger_config.dart';
 export 'package:crispy_logger/manager/logger_manager.dart';
 
 class CrispyLogger {

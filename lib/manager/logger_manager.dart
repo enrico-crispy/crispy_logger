@@ -3,10 +3,15 @@ import 'dart:io';
 
 import 'package:archive/archive_io.dart';
 import 'package:crispy_logger/crispy_logger.dart';
+import 'package:crispy_logger/logger_defaults.dart';
 import 'package:crispy_logger/utils/date_formatter.dart';
+import 'package:logger/logger.dart';
+import 'package:path_provider/path_provider.dart';
 
 abstract class LoggerManager {
-  LoggerManager({this.storageLimit = 50000000, this.maxFileAgeInDays = 7});
+  LoggerManager({this.storageLimit = 50000000, this.maxFileAgeInDays = 7}) {
+    init();
+  }
 
   late final CrispyLogger? logger;
 
@@ -17,13 +22,44 @@ abstract class LoggerManager {
   final int maxFileAgeInDays;
 
   late final String logDirPath;
+  late final String currentFilePath;
 
   Future<void> init() async {
-    logDirPath = await LoggerConfig.logsDirectory;
-    logger = await LoggerConfig.crispyLoggerProvider();
+    logDirPath = await logsDirectory;
+    logger = await crispyLoggerProvider();
 
     unawaited(pruneDirectory());
     unawaited(compressFiles());
+  }
+
+  Future<CrispyLogger> crispyLoggerProvider() async {
+    return CrispyLogger(
+      consoleLogger: Logger(
+        printer: LoggerDefaults.consolePrinter,
+        output: LoggerDefaults.consoleOutput,
+      ),
+      fileLogger: Logger(
+        printer: LoggerDefaults.filePrinter,
+        output: FileOutput(file: await createLogFile()),
+      ),
+    );
+  }
+
+  Future<File> createLogFile() async {
+    final dir = await logsDirectory;
+    final dateTime = DateTime.now();
+    final formattedDateTime = DateFormatter.logFormat(dateTime);
+    final filePath = '$dir$formattedDateTime.log';
+    currentFilePath = filePath;
+
+    return File(filePath).create(recursive: true);
+  }
+
+  Future<String> get logsDirectory async {
+    final appDir = await getApplicationDocumentsDirectory();
+    final logDir =
+        await Directory('${appDir.path}/logs').create(recursive: true);
+    return '${logDir.path}/';
   }
 
   /// Check if file is older than [maxFileAgeInDays] and if so deletes it.
@@ -70,7 +106,6 @@ abstract class LoggerManager {
     final bytes = await file.readAsBytes();
     final archive = decoder.decodeBytes(bytes);
 
-    //await extractArchiveToDisk(archive, logDirPath);
     for (final entry in archive) {
       if (entry.isFile) {
         final fileBytes = entry.readBytes();
@@ -86,13 +121,10 @@ abstract class LoggerManager {
 
     try {
       // Ordered list of file, newest first
-      List<FileSystemEntity> files = logsDirectory.listSync()
-        ..sort(
-          (a, b) => b.statSync().modified.compareTo(a.statSync().modified),
-        );
+      List<FileSystemEntity> files = logsDirectory.listSync();
 
       // Do not compress current log file
-      files.removeAt(0);
+      files.removeWhere((file) => file.absolute.path == currentFilePath);
 
       if (files.isEmpty) {
         logger?.d('There are no files to compress.');
@@ -102,6 +134,8 @@ abstract class LoggerManager {
       // Decompress zipped files
       List<FileSystemEntity> zippedFiles =
           files.where((file) => file.path.contains('.zip')).toList();
+      // Remove zipped file from the compressing list
+      files.removeWhere((file) => file.path.contains('.zip'));
       for (final zippedFile in zippedFiles) {
         final file = File(zippedFile.absolute.path);
         await decompressArchive(file);
@@ -109,12 +143,15 @@ abstract class LoggerManager {
         await file.delete();
       }
 
+      // Reload file list because of extracted files
+      files = logsDirectory.listSync()
+        ..removeWhere((file) => file.absolute.path == currentFilePath);
+
       final encoder = ZipFileEncoder();
       final zipPath = _getZipPath();
-        logger?.d('Creating zip file: $zipPath');
 
-      encoder.create(zipPath);
       logger?.d('Creating zip file: $zipPath');
+      encoder.create(zipPath);
 
       for (final uncompressedFile in files) {
         logger?.t('Zipping file: ${uncompressedFile.absolute.path}');
