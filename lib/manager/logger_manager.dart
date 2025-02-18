@@ -116,7 +116,7 @@ abstract class LoggerManager {
     }
   }
 
-  Future<void> compressFiles() async {
+  Future<void> compressFiles({bool includeCurrentFile = false}) async {
     final logsDirectory = Directory(logDirPath);
 
     try {
@@ -124,7 +124,9 @@ abstract class LoggerManager {
       List<FileSystemEntity> files = logsDirectory.listSync();
 
       // Do not compress current log file
-      files.removeWhere((file) => file.absolute.path == currentFilePath);
+      if (!includeCurrentFile) {
+        files.removeWhere((file) => file.absolute.path == currentFilePath);
+      }
 
       if (files.isEmpty) {
         logger?.d('There are no files to compress.');
@@ -144,8 +146,11 @@ abstract class LoggerManager {
       }
 
       // Reload file list because of extracted files
-      files = logsDirectory.listSync()
-        ..removeWhere((file) => file.absolute.path == currentFilePath);
+      files = logsDirectory.listSync();
+
+      if (!includeCurrentFile) {
+        files.removeWhere((file) => file.absolute.path == currentFilePath);
+      }
 
       final encoder = ZipFileEncoder();
       final zipPath = _getZipPath();
@@ -156,7 +161,9 @@ abstract class LoggerManager {
       for (final uncompressedFile in files) {
         logger?.t('Zipping file: ${uncompressedFile.absolute.path}');
         await encoder.addFile(File(uncompressedFile.absolute.path));
-        await uncompressedFile.delete();
+        if (uncompressedFile.absolute.path != currentFilePath) {
+          await uncompressedFile.delete();
+        }
       }
 
       await encoder.close();
