@@ -9,11 +9,17 @@ import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 
 abstract class LoggerManager {
-  LoggerManager({this.storageLimit = 50000000, this.maxFileAgeInDays = 7}) {
+  LoggerManager({
+    this.storageLimit = 50000000,
+    this.maxFileAgeInDays = 7,
+    this.shouldBlockLogToFile = false,
+  }) {
     init();
   }
 
   late final CrispyLogger? logger;
+
+  final bool shouldBlockLogToFile;
 
   /// The maximum size of the logs directory. Default is 50 MB
   final int storageLimit;
@@ -28,12 +34,13 @@ abstract class LoggerManager {
     logDirPath = await logsDirectory;
     logger = await crispyLoggerProvider();
 
-    unawaited(pruneDirectory());
-    unawaited(compressFiles());
+    await pruneDirectory();
+    await compressFiles();
   }
 
   Future<CrispyLogger> crispyLoggerProvider() async {
     return CrispyLogger(
+      shouldBlockPrintToFileGlobal: shouldBlockLogToFile,
       consoleLogger: Logger(
         printer: LoggerDefaults.consolePrinter,
         output: LoggerDefaults.consoleOutput,

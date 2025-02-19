@@ -3,10 +3,17 @@ import 'package:logger/logger.dart';
 export 'package:crispy_logger/manager/logger_manager.dart';
 
 class CrispyLogger {
-  const CrispyLogger({this.consoleLogger, this.fileLogger});
+  const CrispyLogger({
+    Logger? consoleLogger,
+    Logger? fileLogger,
+    bool shouldBlockPrintToFileGlobal = false,
+  })  : _fileLogger = fileLogger,
+        _consoleLogger = consoleLogger,
+        _shouldBlockPrintToFileGlobal = shouldBlockPrintToFileGlobal;
 
-  final Logger? consoleLogger;
-  final Logger? fileLogger;
+  final Logger? _consoleLogger;
+  final Logger? _fileLogger;
+  final bool _shouldBlockPrintToFileGlobal;
 
   /// Log a message at level [Level.trace].
   void t(
@@ -17,10 +24,10 @@ class CrispyLogger {
     bool shouldPrintToConsole = true,
   }) {
     if (shouldPrintToConsole) {
-      consoleLogger?.t(message, error: error, stackTrace: stackTrace);
+      _consoleLogger?.t(message, error: error, stackTrace: stackTrace);
     }
-    if (shouldPrintToFile) {
-      fileLogger?.t(message, error: error, stackTrace: stackTrace);
+    if (!_shouldBlockPrintToFileGlobal && shouldPrintToFile) {
+      _fileLogger?.t(message, error: error, stackTrace: stackTrace);
     }
   }
 
@@ -33,10 +40,10 @@ class CrispyLogger {
     bool shouldPrintToConsole = true,
   }) {
     if (shouldPrintToConsole) {
-      consoleLogger?.d(message, error: error, stackTrace: stackTrace);
+      _consoleLogger?.d(message, error: error, stackTrace: stackTrace);
     }
-    if (shouldPrintToFile) {
-      fileLogger?.d(message, error: error, stackTrace: stackTrace);
+    if (!_shouldBlockPrintToFileGlobal && shouldPrintToFile) {
+      _fileLogger?.d(message, error: error, stackTrace: stackTrace);
     }
   }
 
@@ -49,10 +56,10 @@ class CrispyLogger {
     bool shouldPrintToConsole = true,
   }) {
     if (shouldPrintToConsole) {
-      consoleLogger?.i(message, error: error, stackTrace: stackTrace);
+      _consoleLogger?.i(message, error: error, stackTrace: stackTrace);
     }
-    if (shouldPrintToFile) {
-      fileLogger?.i(message, error: error, stackTrace: stackTrace);
+    if (!_shouldBlockPrintToFileGlobal && shouldPrintToFile) {
+      _fileLogger?.i(message, error: error, stackTrace: stackTrace);
     }
   }
 
@@ -65,10 +72,10 @@ class CrispyLogger {
     bool shouldPrintToConsole = true,
   }) {
     if (shouldPrintToConsole) {
-      consoleLogger?.w(message, error: error, stackTrace: stackTrace);
+      _consoleLogger?.w(message, error: error, stackTrace: stackTrace);
     }
-    if (shouldPrintToFile) {
-      fileLogger?.w(message, error: error, stackTrace: stackTrace);
+    if (!_shouldBlockPrintToFileGlobal && shouldPrintToFile) {
+      _fileLogger?.w(message, error: error, stackTrace: stackTrace);
     }
   }
 
@@ -81,10 +88,10 @@ class CrispyLogger {
     bool shouldPrintToConsole = true,
   }) {
     if (shouldPrintToConsole) {
-      consoleLogger?.e(message, error: error, stackTrace: stackTrace);
+      _consoleLogger?.e(message, error: error, stackTrace: stackTrace);
     }
-    if (shouldPrintToFile) {
-      fileLogger?.e(message, error: error, stackTrace: stackTrace);
+    if (!_shouldBlockPrintToFileGlobal && shouldPrintToFile) {
+      _fileLogger?.e(message, error: error, stackTrace: stackTrace);
     }
   }
 
@@ -97,10 +104,10 @@ class CrispyLogger {
     bool shouldPrintToConsole = true,
   }) {
     if (shouldPrintToConsole) {
-      consoleLogger?.f(message, error: error, stackTrace: stackTrace);
+      _consoleLogger?.f(message, error: error, stackTrace: stackTrace);
     }
-    if (shouldPrintToFile) {
-      fileLogger?.f(message, error: error, stackTrace: stackTrace);
+    if (!_shouldBlockPrintToFileGlobal && shouldPrintToFile) {
+      _fileLogger?.f(message, error: error, stackTrace: stackTrace);
     }
   }
 }
