@@ -187,10 +187,9 @@ abstract class LoggerManager {
 
   Future<void> sendLogs();
 
-  List<File> getZipFiles() => (Directory(logDirPath)
+  File getZipFile() => (Directory(logDirPath)
       .listSync()
-      .where((file) => file.path.contains('.zip'))
-      .toList() as List<File>);
+      .firstWhere((file) => file.path.contains('.zip')) as File);
 
   String _getZipPath() {
     final dateTime = DateTime.now();
