@@ -80,7 +80,20 @@ abstract class LoggerManager {
     int size = 0;
 
     // Ordered list of file, newest first
-    List<FileSystemEntity> files = logsDirectory.listSync()
+    List<FileSystemEntity> files = logsDirectory.listSync();
+
+    List<FileSystemEntity> zippedFiles =
+        files.where((file) => file.path.contains('.zip')).toList();
+    files.removeWhere((file) => file.path.contains('.zip'));
+    for (final zippedFile in zippedFiles) {
+      final file = File(zippedFile.absolute.path);
+      await decompressArchive(file);
+      logger?.d('Deleting zip file: ${file.absolute.path}');
+      await file.delete();
+    }
+
+    // Ordered list of file, newest first
+    files = logsDirectory.listSync()
       ..sort(
         (a, b) => b.statSync().modified.compareTo(a.statSync().modified),
       );
@@ -174,7 +187,10 @@ abstract class LoggerManager {
 
   Future<void> sendLogs();
 
-  File getZipFile() => (Directory(logDirPath).listSync().firstWhere((file) => file.path.contains('.zip')) as File);
+  List<File> getZipFiles() => (Directory(logDirPath)
+      .listSync()
+      .where((file) => file.path.contains('.zip'))
+      .toList() as List<File>);
 
   String _getZipPath() {
     final dateTime = DateTime.now();
