@@ -19,6 +19,7 @@ abstract class LoggerManager {
 
   late final CrispyLogger? logger;
 
+  /// If true the logger will not log anything to file. If false the parameter set in the logger will be respected.
   final bool shouldBlockLogToFile;
 
   /// The maximum size of the logs directory. Default is 50 MB
@@ -30,6 +31,10 @@ abstract class LoggerManager {
   late final String logDirPath;
   late final String currentFilePath;
 
+  /// Initialize the manager:
+  /// 1. Setup needed fields
+  /// 2. Clean the log's directory
+  /// 3. Compress past session log file
   Future<void> init() async {
     logDirPath = await logsDirectory;
     logger = await crispyLoggerProvider();
@@ -52,6 +57,7 @@ abstract class LoggerManager {
     );
   }
 
+  /// Create the log file that will be used by the logger during this session
   Future<File> createLogFile() async {
     final dir = await logsDirectory;
     final dateTime = DateTime.now();
@@ -62,6 +68,7 @@ abstract class LoggerManager {
     return File(filePath).create(recursive: true);
   }
 
+  /// Return the path of the directory that will be used to save the logs
   Future<String> get logsDirectory async {
     final appDir = await getApplicationDocumentsDirectory();
     final logDir =
@@ -121,6 +128,7 @@ abstract class LoggerManager {
     }
   }
 
+  /// Extract the given archive into the log folder
   Future<void> decompressArchive(File file) async {
     final decoder = ZipDecoder();
     final bytes = await file.readAsBytes();
@@ -136,6 +144,9 @@ abstract class LoggerManager {
     }
   }
 
+  /// Compress files inside the logs folder. 
+  /// 
+  /// If [includeCurrentFile] is true then every file will be included, otherwise the current file will not be included in the archive.
   Future<void> compressFiles({bool includeCurrentFile = false}) async {
     final logsDirectory = Directory(logDirPath);
 
@@ -194,7 +205,8 @@ abstract class LoggerManager {
 
   Future<void> sendLogs();
 
-  File getZipFile() => (Directory(logDirPath)
+  /// Returns the archive containing the logs
+  File get zipFile => (Directory(logDirPath)
       .listSync()
       .firstWhere((file) => file.path.contains('.zip')) as File);
 
