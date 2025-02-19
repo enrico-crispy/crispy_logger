@@ -11,7 +11,9 @@ and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/to/develop-packages).
 -->
 
+[![view - Documentation](https://img.shields.io/badge/view-Documentation-blue?style=for-the-badge)](https://enrico-crispy.github.io/crispy_logger/)
+
 ## Getting started
 
-Extends the class LoggerManager needed to save and handle log files.
+Extends the class LoggerManager needed to save and handle log files. The only method you must override is sendLogs; this method will handle logs sharing.
 
