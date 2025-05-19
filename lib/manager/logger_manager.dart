@@ -160,7 +160,6 @@ abstract class LoggerManager {
       }
 
       if (files.isEmpty) {
-        logger?.d('There are no files to compress.');
         return;
       }
 
@@ -186,11 +185,9 @@ abstract class LoggerManager {
       final encoder = ZipFileEncoder();
       final zipPath = _getZipPath();
 
-      logger?.d('Creating zip file: $zipPath');
       encoder.create(zipPath);
 
       for (final uncompressedFile in files) {
-        logger?.t('Zipping file: ${uncompressedFile.absolute.path}');
         await encoder.addFile(File(uncompressedFile.absolute.path));
         if (uncompressedFile.absolute.path != currentFilePath) {
           await uncompressedFile.delete();
