@@ -13,6 +13,7 @@ abstract class LoggerManager {
     this.storageLimit = 50000000,
     this.maxFileAgeInDays = 7,
     this.shouldBlockLogToFile = false,
+    this.logFilter,
   }) {
     init();
   }
@@ -27,6 +28,8 @@ abstract class LoggerManager {
 
   /// File that are older than these value will be deleted. Default is 7 days.
   final int maxFileAgeInDays;
+
+  final LogFilter? logFilter;
 
   late final String logDirPath;
   late final String currentFilePath;
@@ -49,10 +52,12 @@ abstract class LoggerManager {
       consoleLogger: Logger(
         printer: LoggerDefaults.consolePrinter,
         output: LoggerDefaults.consoleOutput,
+        filter: logFilter,
       ),
       fileLogger: Logger(
         printer: LoggerDefaults.filePrinter,
         output: FileOutput(file: await createLogFile()),
+        filter: logFilter,
       ),
     );
   }
